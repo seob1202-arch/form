@@ -209,24 +209,6 @@ const SECTIONS=[
   O('auto','자동으로 들어와야 합니다','수집 · 연동이 필요합니다')]},
 ]},
 
-{id:'s4',title:'사업성 점검',note:'아직 검증 단계여서 나타난 섹션입니다. 만들기 전에 확인할 것들입니다.',
- if:a=>a.stage==='idea'||a.biz==='yes'||a.biz==='unsure',qs:[
- {id:'revenue',t:'check',label:'이 서비스로 어떻게 돈을 버나요?',opt:1,grid:1,o:[
-  O('fee','거래 수수료'),O('sub','구독료'),O('ad','광고'),O('sell','직접 판매'),
-  O('unit','건당 이용료'),O('b2b','기업 대상 판매'),
-  O('later','당장은 수익 없이 사용자부터',null,1),O('tbd','아직 못 정했습니다',null,1)]},
- {id:'validation',t:'check',label:'지금까지 확인된 것이 있나요?',opt:1,grid:1,o:[
-  O('wait','사전신청 · 대기자 명단'),O('loi','계약서 · 의향서'),O('pre','선주문 · 입금 받은 적 있음'),
-  O('int','잠재 고객 인터뷰'),O('exp','비슷한 사업 경험'),O('no','아직 없습니다',null,1)]},
- {id:'channel',t:'check',label:'첫 고객은 어디서 데려오실 건가요?',opt:1,grid:1,o:[
-  O('own','이미 가진 고객 명단 · 단골'),O('sns','SNS · 커뮤니티 직접 홍보'),
-  O('ads','광고 집행'),O('search','검색 노출 · 블로그'),
-  O('partner','제휴처 소개'),O('offline','오프라인 영업 · 방문'),
-  O('tbd','아직 계획이 없습니다',null,1)]},
- {id:'channel_note',t:'text',label:'그 채널을 조금 더 구체적으로',cond:1,if:a=>any(a.channel)&&!has(a.channel,'tbd'),opt:1,
-  ph:'예: 런던 유학생 오픈채팅방 4곳, 합 3,000명'},
-]},
-
 {id:'s5',title:'예산과 일정',note:'범위만 알려주시면 맞는 방식을 제안할 수 있습니다.',qs:[
  {id:'budget',t:'radio',label:'생각하고 계신 예산',req:1,o:[
   O('b1','~ 500만원'),O('b2','500 ~ 1,500만원'),O('b3','1,500 ~ 3,000만원'),
@@ -239,11 +221,6 @@ const SECTIONS=[
  {id:'later',t:'check',label:'앞에서 고른 기능 중, 2차로 미뤄도 되는 것',opt:1,grid:1,
   help:'하나라도 골라주시면 1차 범위가 줄고 일정이 빨라집니다.',
   odyn:a=>FEATURES.filter(f=>has(a.features,f.v))},
- {id:'biz',t:'radio',label:'사업성 검토도 함께 필요하신가요?',opt:1,
-  help:'수익 구조와 실제 수요가 있는지 만들기 전에 점검하는 작업입니다.',o:[
-  O('yes','네, 만들기 전에 같이 봐주세요'),
-  O('no','아니요, 검증은 끝났습니다 — 제작만'),
-  O('unsure','잘 모르겠습니다 — 판단해 주세요')]},
 ]},
 
 {id:'s6',title:'마지막 확인',note:'두 가지만 더 여쭙겠습니다.',qs:[
@@ -362,22 +339,13 @@ function score(){
   const band=c<=8?['소형','2~6주 규모로 보입니다']:c<=18?['중형','2~4개월, 단계를 나누길 권합니다']:['대형','4개월 이상 · 반드시 단계별로 나눠야 합니다'];
   const ready={idea:['아이디어 단계','설계부터 함께 만들어야 합니다'],doc:['기획 보유','화면 설계 단계가 필요합니다'],
    wire:['설계 완료','바로 견적과 개발로 들어갈 수 있습니다'],live:['운영 중','현행 분석이 선행되어야 합니다']}[A.stage]||['미확인',''];
-  const unval=!any(A.validation)||has(A.validation,'no');
-  const nochan=!any(A.channel)||has(A.channel,'tbd');
-  const norev=!any(A.revenue)||has(A.revenue,'tbd');
-  let biz=null;
-  if(A.biz!=='no'){
-    if(A.stage==='idea'&&unval&&nochan)biz=['사업성 검토를 먼저 권합니다','아직 검증된 수요도, 고객 확보 경로도 없는 상태입니다. 전체 제작 전에 2~3주짜리 검증(랜딩페이지 + 사전신청 수집)으로 수요를 먼저 확인하시면 만들 범위가 크게 줄어듭니다.'];
-    else if(norev||nochan)biz=['수익 · 유입 설계를 함께 봐야 합니다','수익 모델이나 첫 고객 확보 경로가 아직 비어 있습니다. 기능 설계와 같이 정리하는 편이 안전합니다.'];
-    else if(A.biz==='yes'||A.biz==='unsure')biz=['간단한 점검이면 충분합니다','검증 근거가 있어, 착수 미팅에서 1시간 점검으로 갈음할 수 있습니다.'];
-  }
   let fit=null;
   const bmap={b1:1,b2:2,b3:3,b4:4,b5:5},tmap={t1:1,t2:2,t3:3};
   const bi=bmap[A.budget],ti=tmap[A.timeline];
   if(bi&&c>18&&bi<=2)fit=['예산과 범위가 맞지 않습니다','고른 기능 기준으로는 예산을 넘어설 가능성이 큽니다. 2차로 미룰 기능을 더 고르시거나, 핵심만 먼저 여는 방식을 권합니다.'];
   else if(ti&&c>18&&ti===1)fit=['일정이 촉박합니다','이 범위를 한 달 안에 여는 것은 어렵습니다. 범위를 나누는 전제로 논의하겠습니다.'];
   else if(bi&&c<=8&&bi>=4)fit=['예산에 여유가 있습니다','고른 범위 대비 예산이 큽니다. 디자인이나 2차 기능을 당겨올 여지가 있습니다.'];
-  return {c,band,ready,biz,fit};
+  return {c,band,ready,fit};
 }
 
 function label(q,v){
@@ -394,7 +362,6 @@ function md(){
    '- 작성일: '+new Date().toISOString().slice(0,10),
    '- 준비 상태: '+s.ready[0],
    '- 추정 규모: '+s.band[0]+' (복잡도 '+s.c+'점) — '+s.band[1],
-   s.biz?'- 사업성: '+s.biz[0]:'- 사업성: 검토 불필요 (검증 완료로 응답)',
    s.fit?'- 참고: '+s.fit[0]:'',''].filter(x=>x!=='');
   L.push('');
   let n=0;
@@ -438,7 +405,6 @@ function result(){
    +'<div class="card"><div class="card-k">준비 상태</div><div class="card-v">'+s.ready[0]+'</div><div class="card-d">'+s.ready[1]+'</div></div>'
    +'<div class="card"><div class="card-k">추정 규모 · 복잡도 '+s.c+'점</div><div class="card-v">'+s.band[0]+'</div><div class="card-d">'+s.band[1]+'</div></div>';
   if(s.fit)h+='<div class="card warn"><div class="card-k">예산 · 일정</div><div class="card-v">'+s.fit[0]+'</div><div class="card-d">'+s.fit[1]+'</div></div>';
-  if(s.biz)h+='<div class="card warn"><div class="card-k">사업성</div><div class="card-v">'+s.biz[0]+'</div><div class="card-d">'+s.biz[1]+'</div></div>';
   h+='</div><div id="sent"></div>'
    +'<div id="fallback" hidden><p class="q-help">자동 전송이 되지 않았습니다. 아래 내용을 복사해 담당자에게 보내주세요.</p>'
    +'<textarea id="out" readonly>'+esc(text)+'</textarea>'
